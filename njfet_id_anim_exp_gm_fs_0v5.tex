@@ -1,0 +1,121 @@
+\documentclass[x11names,rgb,swedish,export]{standalone}
+
+%Animation frames are output as individual pages of a multipage document, suitable for conversion to other file formats, such as animated GIF, using external programs, such as convert from ImageMagick.org:
+
+%convert -density 300 -delay 4 -loop 0 -alpha remove njfet_id_anim_exp_gm_fs_0v5.pdf njfet_id_anim_exp_gm_fs_0v5.gif
+
+%creates an animated GIF at 100/4=25 frames per second.
+
+\usepackage[no-math]{fontspec}
+\defaultfontfeatures{Ligatures={TeX}}
+\usepackage{babel}
+\usepackage[detect-all,retain-explicit-plus,output-decimal-marker={,},group-digits=integer,group-separator={\,}]{siunitx}
+\usepackage[letterspace=125]{microtype}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pagecolor}
+\usepackage{animate}
+\usetikzlibrary{%
+  arrows,%
+  shapes.misc,% wg. rounded rectangle
+  shapes.arrows,%
+  shapes.symbols,%
+  shapes.gates.logic.US,%
+  backgrounds,%
+  calc,%
+  chains,%
+  fit,%
+  fpu,%
+  matrix,%
+  patterns,%
+  positioning,% wg. " of "
+  scopes,%
+  decorations.pathmorphing,% /pgf/decoration/random steps
+  shadows%
+}
+
+\definecolor{khanPink}{HTML}{FB73BE}
+\definecolor{khanCoral}{HTML}{FF8D71}
+\definecolor{khanYellow}{HTML}{FFE066}
+\definecolor{khanTeal}{HTML}{59F3CE}
+\definecolor{khanLBlue}{HTML}{65D0FA}
+\definecolor{khanBlue}{HTML}{4984F2}
+\definecolor{khanPurple}{HTML}{A87DFF}
+
+\pgfplotsset{compat=1.15}
+
+\begin{document}\sisetup{math-micro=\text{µ},text-micro=µ}
+\pagecolor{black}
+%  \begin{tikzpicture}[x=1mm,y=1mm]
+%     \draw[black, -stealth, line width=.3mm] (-5,0) -- (55,0) node[pos=1,anchor=north west]{$V_{BE} [\si{\volt}]$};
+%     \draw[black, -stealth, line width=.3mm] (0,-5) -- (0,55) node[pos=1,anchor=south west]{$I_{C} [\si{\milli\ampere}]$};
+\begin{animateinline}%
+  [
+  loop,
+  controls,
+  buttonfg=1:1:1,
+  begin={\begin{tikzpicture}[x=1mm,y=1mm]
+         \useasboundingbox (-15,-10) rectangle (85,65);},
+  end={\end{tikzpicture}}
+  ]{5}
+  \multiframe{36}{iCount=0+1}%
+  {
+    \begin{axis}
+      [
+        color = white,
+        clip=false,
+        xmin = -3.2,
+        xmax = 0.5,
+        xtick={-3,-2,-1,0.0},
+        ymin = 0,
+        ymax = 20.9,
+        axis x discontinuity=none, %crunch parallel none
+        %restrict x to domain =0.64:1,
+        restrict y to domain =0:20,
+        minor x tick num=1,
+        minor y tick num=4,
+        tick style={line width=0.2mm},
+        x tick label style={/pgf/number format/fixed zerofill, /pgf/number format/precision=2},
+        y tick label style={anchor=west,inner sep=5pt},
+        axis line style={white, -stealth, line width=.3mm},
+        axis lines = middle,
+        x label style={at={(axis description cs:1,0)},anchor=north west},
+        xlabel = {$V_{GS} [\si{\volt}]$},
+        y label style={at={(axis cs:0,21)},anchor=south west},
+        ylabel = {$I_{D} [\si{\milli\ampere}]$},
+      ]
+
+      \pgfkeys{/pgf/fpu=true}
+        \pgfmathsetmacro{\idss}{20}
+        \pgfmathsetmacro{\vp}{-2.5}
+        \pgfmathsetmacro{\vq}{-1}
+        \pgfmathsetmacro{\vin}{\vq+0.5*sin(\iCount*10)}
+        \pgfmathsetmacro{\iq}{\idss*(1-\vq/\vp)^2}
+        \pgfmathsetmacro{\id}{\idss*(1-\vin/\vp)^2}
+        \pgfmathsetmacro{\idl}{\iq+\idss*(-2/\vp+2*\vq/\vp^2)*(\vin-\vq)}
+      \pgfkeys{/pgf/fpu=false}
+
+      \addplot[samples at={\vp,{\vp+.1},...,0},smooth,draw=khanBlue,line width=.4mm] {\idss*(1-x/\vp)^2};
+      \addplot[samples at={\vp,{\vp+.05},...,0},smooth,draw=khanYellow,line width=.4mm] {\iq+\idss*(-2/\vp+2*\vq/\vp^2)*(x-\vq)};
+
+      \draw[-stealth,khanPink,line width=.3mm] (axis cs: \vin,0) -- (axis cs: \vin,\id);
+      \draw[-stealth,khanPink,line width=.3mm] (axis cs: \vin,\id) -- (axis cs: 0,\id);
+%
+      \draw[-stealth,khanPink,line width=.3mm] (axis cs: \vin,0) -- (axis cs: \vin,\idl);
+      \draw[-stealth,khanPink,dashed,line width=.3mm] (axis cs: \vin,\idl) -- (axis cs: 0,\idl);
+%
+      \ifthenelse{\iCount = 0}{}%
+      {%
+        \draw[-stealth,khanCoral,line width=.2mm] (axis cs: \vq,-2) -- (axis cs: \vin,-2) node[pos=0.5,anchor=north,text=khanCoral]{$u_{in}$};
+        \draw[-stealth,khanLBlue,line width=.2mm] (axis cs: .45,\iq) -- (axis cs: .45,\id) node[pos=0.5,anchor=west,text=khanLBlue]{$i_{d}$};
+      }
+%
+      \draw[-stealth,khanTeal,line width=.3mm] (axis cs: \vq,0) -- (axis cs: \vq,\iq);
+      \draw[-stealth,khanTeal,line width=.3mm] (axis cs: \vq,\iq) -- (axis cs: 0,\iq) node[pos=1,anchor=west,text=khanTeal]{$I_{DQ}$};
+
+    \end{axis}
+  }%end multiframe
+\end{animateinline}
+
+\end{document}
+
